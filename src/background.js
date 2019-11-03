@@ -7,6 +7,9 @@ import {
 } from 'vue-cli-plugin-electron-builder/lib'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
+// Disable HTTP request caching
+app.commandLine.appendSwitch('disable-http-cache');
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
@@ -16,9 +19,18 @@ protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true
 
 function createWindow () {
   // Create the browser window.
-  win = new BrowserWindow({ width: 800, height: 600, webPreferences: {
-    nodeIntegration: true
-  } })
+  win = new BrowserWindow({
+    width: 400,
+    height: 400,
+    minWidth: 400,
+    minHeight: 400,
+    webPreferences: {
+      nodeIntegration: true,
+      // This app needs to be able to make requests to a lot of different sites.
+      webSecurity: false,
+      webviewTag: true
+    }
+  })
 
   win.setMenuBarVisibility(false)
 

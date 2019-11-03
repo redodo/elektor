@@ -1,75 +1,38 @@
-import { remote } from 'electron'
-import path from 'path'
-import FTP from 'ftps'
 import Vue from 'vue'
 import Vuex from 'vuex'
+import Site from '@/site'
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
     sites: [],
-    config: {
-      path: remote.getGlobal('app').getPath('userData')
-    }
+    credentials: {}
+  },
+  getters: {
+    getSite: (state) => (id) => state.sites.find(site => site.id === id),
+    getCredentials: (state) => (id) => state.credentials[id],
+    siteCount: (state) => state.sites.length
   },
   mutations: {
     addSite (state, site) {
       state.sites.push(site)
+    },
+    setCredentials (state, { id, username, password }) {
+      state.credentials[id] = { username, password }
     }
   },
   actions: {
-    addSite ({ commit, state, dispatch }, { host, username, password }) {
+    addSite ({ commit, state }, { domain, username, password }) {
       return new Promise((resolve, reject) => {
-        let connection = new FTP({ host, username, password })
-        let site = {
-          host,
-          username,
-          password,
-          progress: 0,
-          localPath: path.join(state.config.path, 'sites', host)
-        }
-        connection.ls().exec((_, response) => {
-          if (response.error === null) {
-            commit('addSite', site)
-            resolve(response, site)
-            dispatch('downloadSite', site)
-          } else {
-            reject(response, site)
-          }
-        })
-      })
-    },
-    downloadSite ({ dispatch }, site) {
-      return dispatch('_syncSite', { site, upload: false })
-    },
-    uploadSite ({ dispatch }, site) {
-      return dispatch('_syncSite', { site, upload: true })
-    },
-    _syncSite ({ state }, { site, upload = false }) {
-      site.progress = 0
-      return new Promise((resolve, reject) => {
-        let connection = new FTP({
-          host: site.host,
-          username: site.username,
-          password: site.password
-        })
-        connection.mirror({
-          localDir: site.localPath,
-          parallel: true,
-          options: '-n', // Sync only newer files
-          upload: upload
-        }).exec((_, response) => {
-          if (response.error === null) {
-            site.progress = 1
-            resolve(response, site)
-          } else {
-            reject(response, site)
-          }
-        })
+        const site = new Site({ domain })
+        return site.validate({ username, password }).then(() => {
+          site.id = state.sites.length + 1
+          commit('addSite', site)
+          commit('setCredentials', { id: site.id, username, password })
+          resolve(site)
+        }).catch(reject)
       })
     }
-  },
-  modules: {
   }
 })

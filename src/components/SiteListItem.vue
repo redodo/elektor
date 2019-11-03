@@ -1,13 +1,13 @@
 <template>
-  <div class="site">
+  <router-link tag="div" :to="`/site/${site.id}`" class="site">
     <div class="site__progress" :style="style" :class="{ 'site__progress--done': !isSyncing }"></div>
     <div class="site__label">
       <span class="flex-grow">{{ site.host }}</span>
-      <button class="flex-shrink-0 upload-button" @click="uploadSite(site)" :disabled="isSyncing">
+      <button class="flex-shrink-0 upload-button" @click.stop="uploadSite(site)" :disabled="isSyncing">
         <i class="fas fa-arrow-up"></i>
       </button>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <script>
@@ -39,10 +39,17 @@ export default {
 .site {
   padding: 1rem;
   margin-bottom: 0.25rem;
-  background: rgba(white, 0.1);
   font-family: Cousine, 'Courier New', Courier, monospace;
   position: relative;
   overflow: hidden;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(white, 0.2);
+  }
+  &:active {
+    box-shadow: 0 0 0 0.25rem orange;
+  }
 
   &__progress {
     position: absolute;
