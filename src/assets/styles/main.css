@@ -9,12 +9,12 @@ label {
     display: flex;
     flex-direction: column;
 }
-input {
+.input {
     background: white;
     padding: 0.25rem 0.5rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
 }
-input:focus {
+.input:focus {
     outline: 0;
     border-color: rgba(255, 0, 0.8);
     box-shadow: 0 0 0 3px rgba(255, 127, 0.4);

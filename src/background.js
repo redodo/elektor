@@ -8,7 +8,7 @@ import {
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Disable HTTP request caching
-app.commandLine.appendSwitch('disable-http-cache');
+app.commandLine.appendSwitch('disable-http-cache')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -20,8 +20,8 @@ protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 400,
-    height: 400,
+    width: 1024,
+    height: 800,
     minWidth: 400,
     minHeight: 400,
     webPreferences: {

@@ -6,7 +6,7 @@ import { remote } from 'electron'
 export default class Site {
   constructor ({ id, domain, config }) {
     this.id = id
-    this.domain = domain
+    this.domain = new URL(domain).hostname
     this.config = config
   }
 
@@ -21,7 +21,7 @@ export default class Site {
         this.config = response.data
         resolve()
       }).catch(_ => {
-        reject(new Error('This site is not configured for Lektor Manage.'))
+        reject(new Error('This site is not configured for Lektor Manager.'))
       })
     })
   }
@@ -98,7 +98,7 @@ export default class Site {
     return path.join(
       remote.getGlobal('app').getPath('userData'),
       'sites',
-      this.getHost()
+      this.domain
     )
   }
 

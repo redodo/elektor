@@ -5,17 +5,18 @@
         <h1 class="font-bold text-2xl mb-2 text-gray-600">Manage your Lektor site</h1>
         <label>
           Domain
-          <input class="mb-2" type="text" placeholder="getlektor.com" v-model="domain" />
+          <input class="mb-2 input" type="text" placeholder="getlektor.com" v-model="domain" />
         </label>
         <label>
           Username
-          <input class="mb-2" type="text" placeholder="admin" v-model="username" />
+          <input class="mb-2 input" type="text" placeholder="admin" v-model="username" />
         </label>
         <label>
           Password
-          <input class="mb-2" type="password" placeholder="••••••••••" v-model="password" />
+          <input class="mb-2 input" type="password" placeholder="••••••••••" v-model="password" />
         </label>
         <span v-if="error" class="py-1 px-2 border border-red-300 bg-red-200">{{ error }}</span>
+        <button></button>
       </form>
     </ViewContent>
     <ActionBar>

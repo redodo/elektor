@@ -1,1 +1,1 @@
-# Lektor Manage
+# Lektor Manager
