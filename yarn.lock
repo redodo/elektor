@@ -1690,6 +1690,11 @@ base@^0.11.1:
     mixin-deep "^1.2.0"
     pascalcase "^0.1.1"
 
+basic-ftp@^4.4.1:
+  version "4.4.1"
+  resolved "https://registry.yarnpkg.com/basic-ftp/-/basic-ftp-4.4.1.tgz#5eff38149219d81edb1e7d59a7c4bb80b9fe6eb3"
+  integrity sha512-viZf+YQu5EMWGgzncvuxvyYJrMC+6OY7txnGsxdL25CraQ+ZnMYP8FUhEav5SEe/Z1VyvA/SV0ACQBWhywtpsA==
+
 batch@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/batch/-/batch-0.6.1.tgz#dc34314f4e679318093fc760272525f94bf25c16"
@@ -3314,11 +3319,6 @@ dotenv@^8.0.0, dotenv@^8.2.0:
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.2.0.tgz#97e619259ada750eea3e4ea3e26bceea5424b16a"
   integrity sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==
 
-duplex-child-process@0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/duplex-child-process/-/duplex-child-process-0.0.5.tgz#1c2462b8ec8fd01e432836ebbd592bcdffbb65e9"
-  integrity sha1-HCRiuOyP0B5DKDbrvVkrzf+7Zek=
-
 duplexer3@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
@@ -4294,14 +4294,6 @@ fsevents@~2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.1.1.tgz#74c64e21df71721845d0c44fe54b7f56b82995a9"
   integrity sha512-4FRPXWETxtigtJW/gxzEDsX1LVbPAM93VleB83kZB+ellqbHMkyt2aJfuzNLRvFPnGi6bcE5SvfxgbXPeKteJw==
-
-ftps@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/ftps/-/ftps-1.1.1.tgz#fa8034b4aa5a877e89ac819339028ff2656643fd"
-  integrity sha512-SPMvp+lKgBq3G9lKEknRal1iC/mIBnvEoZDqWoDDqKtLnraGOr4ctmCmOo4B99epxs2spwlxofdRcMq+g7wN0Q==
-  dependencies:
-    duplex-child-process "0.0.5"
-    lodash "^4.4.0"
 
 function-bind@^1.0.2, function-bind@^1.1.1:
   version "1.1.1"
@@ -5750,7 +5742,7 @@ lodash.uniq@^4.5.0:
   resolved "https://registry.yarnpkg.com/lodash.uniq/-/lodash.uniq-4.5.0.tgz#d0225373aeb652adc1bc82e4945339a842754773"
   integrity sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
 
-lodash@^4.17.11, lodash@^4.17.12, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.3, lodash@^4.3.0, lodash@^4.4.0, lodash@^4.8.0, lodash@~4.17.10:
+lodash@^4.17.11, lodash@^4.17.12, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.3, lodash@^4.3.0, lodash@^4.8.0, lodash@~4.17.10:
   version "4.17.15"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
   integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==

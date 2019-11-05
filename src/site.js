@@ -1,12 +1,19 @@
 import axios from 'axios'
-import FTP from 'ftps'
+import { Client, enterPassiveModeIPv4 } from 'basic-ftp'
 import path from 'path'
 import { remote } from 'electron'
 
 export default class Site {
   constructor ({ id, domain, config }) {
+    let host = domain
+    try {
+      host = new URL(domain).hostname
+    } catch (err) {
+      host = domain
+    }
+
     this.id = id
-    this.domain = new URL(domain).hostname
+    this.domain = host
     this.config = config
   }
 
@@ -28,11 +35,10 @@ export default class Site {
 
   testConnection ({ username, password }) {
     return new Promise((resolve, reject) => {
-      const connection = this._getConnection(username, password)
-      connection.ls().exec((_, response) => {
-        if (response.error === null) resolve()
-        else reject(new Error('Username or password is incorrect.'))
-      })
+      this._getFTPClient(username, password).then(client => {
+        client.close()
+        resolve()
+      }).catch(reject)
     })
   }
 
@@ -42,55 +48,39 @@ export default class Site {
     })
   }
 
-  _getConnection (username, password) {
-    return new FTP({
-      host: this.getHost(),
-      username: username,
-      password: password
+  async _getFTPClient (username, password) {
+    const client = new Client(10000)
+    console.log(enterPassiveModeIPv4)
+    // client.prepareTransfer = enterPassiveModeIPv4
+    try {
+      await client.access({
+        host: this.domain,
+        user: username,
+        password: password
+      })
+      console.log(await client.features())
+    } catch (err) {
+      console.error(err)
+    }
+    client.trackProgress(info => {
+      console.log(info)
     })
+    return client
   }
 
-  downloadFiles ({ username, password }) {
-    return new Promise((resolve, reject) => {
-      // TODO: keep current connection saved
-      const connection = this._getConnection(username, password)
-      connection.mirror({
-        upload: false,
-        remoteDir: this.getRemoteSourceDir(),
-        localDir: this.getLocalSourceDir(),
-        options: '-n'
-      }).mirror({
-        upload: false,
-        remoteDir: this.getRemoteTargetDir(),
-        localDir: this.getLocalTargetDir(),
-        options: '-n'
-      }).exec((_, response) => {
-        if (response.error === null) resolve()
-        else reject(new Error(response.error))
-      })
-    })
+  async downloadFiles ({ username, password }) {
+    const client = await this._getFTPClient(username, password)
+    client.ftp.verbose = true
+    await client.downloadToDir(this.getLocalSourceDir(), this.getRemoteSourceDir())
+    // await client.downloadToDir(this.getLocalTargetDir(), this.getRemoteTargetDir())
+    client.close()
   }
 
-  uploadFiles ({ username, password }) {
-    return new Promise((resolve, reject) => {
-      // TODO: keep current connection saved
-      const connection = this._getConnection(username, password)
-      connection.mirror({
-        upload: true,
-        localDir: this.getLocalSourceDir(),
-        remoteDir: this.getRemoteSourceDir(),
-        options: '-n'
-      }).mirror({
-        upload: true,
-        localDir: this.getLocalTargetDir(),
-        remoteDir: this.getRemoteTargetDir(),
-        options: '-n'
-      }).exec((_, response) => {
-        console.log(response)
-        if (response.error === null) resolve()
-        else reject(new Error(response.error))
-      })
-    })
+  async uploadFiles ({ username, password }) {
+    const client = await this._getFTPClient(username, password)
+    await client.uploadFromDir(this.getLocalSourceDir(), this.getRemoteSourceDir())
+    await client.uploadFromDir(this.getLocalTargetDir(), this.getRemoteTargetDir())
+    client.close()
   }
 
   getLocalDir () {
@@ -111,11 +101,11 @@ export default class Site {
   }
 
   getRemoteSourceDir () {
-    return this.config.project.source
+    return path.join('/', this.config.project.source)
   }
 
   getRemoteTargetDir () {
-    return this.config.project.target
+    return path.join('/', this.config.project.target)
   }
 
   getHost () {

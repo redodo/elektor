@@ -4,6 +4,8 @@
 
       <form @submit.prevent="openUrl(currentUrl)" class="url-bar m-1 shadow bg-white pl-3 rounded border border-gray-400 flex flex-grow-1 w-full items-center" :class="{ 'url-bar--focused': inputFocused }">
         <div class="url-bar__progress rounded rounded-r-none" :style="{ width: progressWidth }" :class="[ progress >= 100 ? 'bg-white' : 'bg-green-200' ]"></div>
+        <div class="url-bar__back h-full relative px-4 flex items-center border rounded" @click="goBack">◀</div>
+        <div class="url-bar__forward h-full relative px-4 flex items-center border rounded" @click="goForward">▶</div>
         <span class="url-bar__status mr-1 py-1 flex-shrink-0 w-24 text-right relative" :class="{ 'text-green-700': this.status }">{{ this.status || 'Viewing' }}</span>
         <span class="url-bar__site relative flex-shrink-0 h-full flex items-center font-bold">
           <div class="url-bar__site-label flex items-center h-full" @click="switcherVisible = !switcherVisible">{{ site.domain }}</div>
@@ -19,7 +21,7 @@
         <button @click="uploadFiles">Upload files</button>
       </div>
     </div>
-    <webview ref="webview" class="user-select-auto border-0 w-full h-full flex-grow-1" :src="webviewUrl"></webview>
+    <iframe ref="webview" class="user-select-auto border-0 w-full h-full flex-grow-1" :src="webviewUrl"></iframe>
   </div>
 </template>
 
@@ -57,6 +59,7 @@ export default {
   },
   mounted () {
     if (this.site) {
+      console.log(this.site)
       this.$refs.webview.addEventListener('dom-ready', event => {
         // Fix selection cursor visibility
         // Remove this once https://github.com/electron/electron/issues/14474 is fixed
@@ -80,6 +83,16 @@ export default {
           if (url.search) this.currentUrl += decodeURI(url.search)
           if (url.hash) this.currentUrl += url.hash
         }
+      })
+
+      this.$refs.webview.addEventListener('load', event => {
+        // Update the url bar
+        let url = new URL(this.$refs.webview.contentWindow.location.href)
+        this.currentUrl = url.pathname.slice(1)
+        if (url.search) this.currentUrl += decodeURI(url.search)
+        if (url.hash) this.currentUrl += url.hash
+        // Update title
+        document.title = this.$refs.webview.contentWindow.document.title + ' - Lektor Manager'
       })
 
       this.initSite()
@@ -115,6 +128,13 @@ export default {
     }
   },
   methods: {
+    goBack () {
+      console.log(this.$refs.webview.contentWindow)
+      this.$refs.webview.contentWindow.history.back()
+    },
+    goForward () {
+      this.$refs.webview.contentWindow.history.forward()
+    },
     initSite () {
       let serverFn = this.isServerUp ? this.restartServer : this.startServer
       if (!this.downloaded) {
@@ -141,7 +161,6 @@ export default {
           this.progress = 0
           this.increaseProgress(95)
         }
-        console.log('starting server for site', this.site.domain)
         this.process = spawn(
           'lektor',
           ['server', '-O', this.site.getLocalTargetDir()],
@@ -169,6 +188,8 @@ export default {
         if (this.process) {
           this.process.on('close', resolve)
           this.process.kill('SIGINT')
+        } else {
+          resolve()
         }
       })
     },
