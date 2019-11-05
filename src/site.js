@@ -101,11 +101,11 @@ export default class Site {
   }
 
   getRemoteSourceDir () {
-    return path.join('/', this.config.project.source)
+    return this.config.project.source
   }
 
   getRemoteTargetDir () {
-    return path.join('/', this.config.project.target)
+    return this.config.project.target
   }
 
   getHost () {
