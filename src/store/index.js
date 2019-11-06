@@ -26,7 +26,9 @@ export default new Vuex.Store({
     addSite ({ commit, state }, { domain, username, password }) {
       return new Promise((resolve, reject) => {
         const site = new Site({ domain })
+        console.log('validating...')
         return site.validate({ username, password }).then(() => {
+          console.log('validation passed')
           site.id = state.sites.length + 1
           commit('addSite', site)
           commit('setCredentials', { id: site.id, username, password })

@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { Client, enterPassiveModeIPv4 } from 'basic-ftp'
 import path from 'path'
 import { remote } from 'electron'
+import FTPWrapper from '@/ftp-wrapper'
 
 export default class Site {
   constructor ({ id, domain, config }) {
@@ -33,54 +33,42 @@ export default class Site {
     })
   }
 
-  testConnection ({ username, password }) {
-    return new Promise((resolve, reject) => {
-      this._getFTPClient(username, password).then(client => {
-        client.close()
-        resolve()
-      }).catch(reject)
-    })
+  async testConnection ({ username, password }) {
+    const client = this._getFTPClient(username, password)
+    await client.connect()
+    // TODO: Keep connection alive, the next step is usually syncing a remote
+    //       directory with a local directory.
+    // client.disconnect()
   }
 
   async validate ({ username, password }) {
-    return this.loadRemoteConfig().then(() => {
-      return this.testConnection({ username, password })
-    })
+    await this.loadRemoteConfig()
+    await this.testConnection({ username, password })
   }
 
-  async _getFTPClient (username, password) {
-    const client = new Client(10000)
-    console.log(enterPassiveModeIPv4)
-    // client.prepareTransfer = enterPassiveModeIPv4
-    try {
-      await client.access({
+  _getFTPClient (username, password) {
+    if (this.client === undefined) {
+      this.client = new FTPWrapper({
         host: this.domain,
         user: username,
         password: password
       })
-      console.log(await client.features())
-    } catch (err) {
-      console.error(err)
     }
-    client.trackProgress(info => {
-      console.log(info)
-    })
-    return client
+    return this.client
   }
 
   async downloadFiles ({ username, password }) {
-    const client = await this._getFTPClient(username, password)
-    client.ftp.verbose = true
-    await client.downloadToDir(this.getLocalSourceDir(), this.getRemoteSourceDir())
-    // await client.downloadToDir(this.getLocalTargetDir(), this.getRemoteTargetDir())
-    client.close()
+    const client = this._getFTPClient(username, password)
+    await client.downloadDir(this.getLocalSourceDir(), this.getRemoteSourceDir())
+    await client.downloadDir(this.getLocalTargetDir(), this.getRemoteTargetDir())
+    client.disconnect()
   }
 
   async uploadFiles ({ username, password }) {
-    const client = await this._getFTPClient(username, password)
-    await client.uploadFromDir(this.getLocalSourceDir(), this.getRemoteSourceDir())
-    await client.uploadFromDir(this.getLocalTargetDir(), this.getRemoteTargetDir())
-    client.close()
+    const client = this._getFTPClient(username, password)
+    await client.uploadDir(this.getLocalSourceDir(), this.getRemoteSourceDir())
+    await client.uploadDir(this.getLocalTargetDir(), this.getRemoteTargetDir())
+    client.disconnect()
   }
 
   getLocalDir () {

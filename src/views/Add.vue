@@ -15,7 +15,7 @@
           Password
           <input class="mb-2 input" type="password" placeholder="••••••••••" v-model="password" />
         </label>
-        <span v-if="error" class="py-1 px-2 border border-red-300 bg-red-200">{{ error }}</span>
+        <span v-if="error" class="py-1 whitespace-pre-wrap font-mono px-2 border border-red-300 bg-red-200">{{ error }}</span>
         <button></button>
       </form>
     </ViewContent>
@@ -55,6 +55,7 @@ export default {
     save () {
       this.error = null
       this.isConnecting = true
+
       this.addSite({
         domain: this.domain,
         username: this.username,
