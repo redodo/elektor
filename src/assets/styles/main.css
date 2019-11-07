@@ -19,9 +19,3 @@ label {
     border-color: rgba(255, 0, 0.8);
     box-shadow: 0 0 0 3px rgba(255, 127, 0.4);
 }
-button {
-    border: 0;
-    color: white;
-    font-weight: bolder;
-    background: #ff5500;
-}

@@ -36,9 +36,6 @@ export default class Site {
   async testConnection ({ username, password }) {
     const client = this._getFTPClient(username, password)
     await client.connect()
-    // TODO: Keep connection alive, the next step is usually syncing a remote
-    //       directory with a local directory.
-    // client.disconnect()
   }
 
   async validate ({ username, password }) {
@@ -61,14 +58,12 @@ export default class Site {
     const client = this._getFTPClient(username, password)
     await client.downloadDir(this.getLocalSourceDir(), this.getRemoteSourceDir())
     await client.downloadDir(this.getLocalTargetDir(), this.getRemoteTargetDir())
-    client.disconnect()
   }
 
   async uploadFiles ({ username, password }) {
     const client = this._getFTPClient(username, password)
     await client.uploadDir(this.getLocalSourceDir(), this.getRemoteSourceDir())
     await client.uploadDir(this.getLocalTargetDir(), this.getRemoteTargetDir())
-    client.disconnect()
   }
 
   getLocalDir () {

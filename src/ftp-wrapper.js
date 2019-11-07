@@ -7,6 +7,7 @@ export default class FTPWrapper {
     this.config = config
     this.client = new Client()
     this.connected = false
+    this._supportsMTDM = undefined
   }
 
   connect () {
@@ -23,7 +24,10 @@ export default class FTPWrapper {
   }
 
   async requireConnection () {
-    if (!this.connected) await this.connect()
+    if (!this.connected) {
+      console.log('Reconnecting...')
+      await this.connect()
+    }
   }
 
   disconnect () {
@@ -91,11 +95,40 @@ export default class FTPWrapper {
     })
   }
 
+  lastMod (remotePath) {
+    return new Promise(async (resolve, reject) => {
+      await this.requireConnection()
+      this.client.lastMod(remotePath, (err, date) => {
+        if (err) reject(err)
+        else resolve(date)
+      })
+    })
+  }
+
+  async tryGetLastMod (remotePath) {
+    if (this._supportsMTDM !== false) {
+      try {
+        let date = await this.lastMod(remotePath)
+        this._supportsMTDM = true
+        return date
+      } catch (err) {
+        // TODO: Catch only MTDM-not-supported errors
+        //
+        // This version will not execute subsequent MTDM requests if the first
+        // request fails, even if MTDM is supported by the server.
+        if (this._supportsMTDM === undefined) this._supportsMTDM = false
+      }
+    }
+    return null
+  }
+
   downloadFile (localPath, remotePath) {
     return new Promise(async (resolve, reject) => {
       await this.requireConnection()
+      let remoteLastMod = await this.tryGetLastMod(remotePath)
       this.get(remotePath).then(stream => {
         stream.once('close', () => {
+          if (remoteLastMod) fs.utimesSync(localPath, remoteLastMod, remoteLastMod)
           resolve()
         })
         stream.pipe(fs.createWriteStream(localPath))
@@ -129,7 +162,6 @@ export default class FTPWrapper {
             let stats = fs.statSync(localPath)
             if (stats.mtimeMs >= Date.parse(item.date)) {
               // File can be skipped
-              console.log(`Skipping ${localPath}`)
               continue
             }
           } catch (err) {
@@ -167,18 +199,10 @@ export default class FTPWrapper {
     await this.requireConnection()
     // Make sure the remote directory exists
     for (let item of fs.readdirSync(localDir, { withFileTypes: true })) {
-      let remoteFiles
-      if (onlyNewer) {
-        // Get the modification dates of the remote files by executing a list command
-        remoteFiles = (await this.list()).reduce((result, item) => {
-          result[item.name] = item
-          return result
-        }, {})
-      }
       let localPath = path.join(localDir, item.name)
       if (item.isDirectory()) {
         // Create the directory remotely if it doesn't exist
-        await this.mkdir(item.name, true)
+        await this.mkdir(item.name)
         // Enter the directory
         await this.cwd(item.name)
         await this._uploadDirFrom(localPath, onlyNewer)
@@ -186,13 +210,14 @@ export default class FTPWrapper {
       } else if (item.isFile()) {
         if (onlyNewer) {
           try {
-            let stats = fs.statSync(localPath)
-            console.log(remoteFiles)
-            if (Date.parse(remoteFiles[item.name].date) >= stats.mtimeMs) {
+            let remoteDate = await this.tryGetLastMod(item.name)
+            let localDate = fs.statSync(localPath).mtime
+            if (remoteDate >= localDate) {
               // File can be skipped
-              console.log(`Skipping ${localPath}`)
               continue
             }
+            console.log('remot', remoteDate)
+            console.log('local', localDate)
           } catch (err) {
             console.log(err)
             // File does not exist
@@ -201,7 +226,7 @@ export default class FTPWrapper {
         }
         // Upload the file
         console.log(`Uploading ${localPath}`)
-        await this.uploadFile(localPath, this.name)
+        await this.uploadFile(localPath, item.name)
       }
     }
   }
