@@ -9,15 +9,18 @@ const DEFAULT_MAX_RETRIES = 3
 const LEKTOR_OUTPUT_SERVER_RUNNING = '* Running on http://'
 const LEKTOR_OUTPUT_PORT_IN_USE = 'OSError: [Errno 98] Address already in use'
 
+// Error codes
+export const ERR_PORT_IN_USE = 'ERR_PORT_IN_USE'
+
 class LektorServerProcess {
   constructor ({ workDir, host, port, outputPath, noPrune, verbose, maxRetries }) {
     this.workDir = workDir
     this.host = host || DEFAULT_HOST
-    this.port = port || DEFAULT_PORT
+    this.port = Number(port || DEFAULT_PORT)
     this.outputPath = outputPath
     this.noPrune = Boolean(noPrune)
     this.verbose = Boolean(verbose)
-    this.maxRetries = maxRetries !== undefined ? maxRetries : DEFAULT_MAX_RETRIES;
+    this.maxRetries = maxRetries !== undefined ? maxRetries : DEFAULT_MAX_RETRIES
 
     this.process = null
     this._retries = 0
@@ -27,8 +30,8 @@ class LektorServerProcess {
     const args = [
       'server',
       '--host', this.host,
-      '--port', this.port,
-    ];
+      '--port', this.port
+    ]
     if (this.outputPath) args.push(...['--output-path', this.outputPath])
     if (this.noPrune) args.push('--no-prune')
     if (this.verbose) args.push('--verbose')
@@ -43,7 +46,7 @@ class LektorServerProcess {
     return options
   }
 
-  start () {
+  _spawn () {
     return new Promise((resolve, reject) => {
       this.process = spawn(
         'lektor',
@@ -52,15 +55,32 @@ class LektorServerProcess {
       )
       this.process.on('exit', reject)
       this.process.stderr.on('data', data => {
-        let output = String(data)
+        const output = String(data)
+
         if (output.includes(LEKTOR_OUTPUT_SERVER_RUNNING)) {
           resolve()
-        }
-        else if (output.includes(LEKTOR_OUTPUT_PORT_IN_USE)) {
-          // TODO: Retry on different port
+        } else if (output.includes(LEKTOR_OUTPUT_PORT_IN_USE)) {
+          const err = new Error(`Port ${this.port} is not available`)
+          err.code = ERR_PORT_IN_USE
+          reject(err)
         }
       })
     })
+  }
+
+  async start () {
+    try {
+      await this._spawn()
+    } catch (err) {
+      if (err.code === ERR_PORT_IN_USE) {
+        if (this._retries < this.maxRetries) {
+          this.port++
+          this._retries++
+          return this._spawn()
+        }
+      }
+      throw err
+    }
   }
 }
 
